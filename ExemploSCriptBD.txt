@@ -1,0 +1,239 @@
+﻿DROP DATABASE IF EXISTS Biblioteca;
+-- 1
+CREATE DATABASE Biblioteca;
+
+-- 2
+USE Biblioteca;
+
+CREATE TABLE Autores (
+	CodAutor	INT AUTO_INCREMENT,
+	NomeAutor	VARCHAR(200) NOT NULL,
+	PRIMARY KEY (CodAutor)
+	);
+	
+CREATE TABLE Areas_Tematicas (
+	CodArea		INT AUTO_INCREMENT,
+	Designacao	VARCHAR(50) NOT NULL,
+	PRIMARY KEY	(CodArea)
+	);
+	
+CREATE TABLE Utentes (
+	ID_Utente	INT AUTO_INCREMENT,
+	Nome		VARCHAR(100) NOT NULL,
+	Morada		VARCHAR(100) NOT NULL,
+	PRIMARY KEY	(ID_Utente)
+	);
+	
+CREATE TABLE Livros (
+	CodLivro	INT AUTO_INCREMENT,
+	Titulo		VARCHAR(100) NOT NULL,
+	Editora		VARCHAR (50) NOT NULL,
+	Ano			INT,
+	CodArea		INT	NOT NULL,
+	PRIMARY KEY	(CodLivro),
+	FOREIGN KEY (CodArea) REFERENCES Areas_Tematicas(CodArea)
+		ON UPDATE CASCADE
+	);
+	
+CREATE TABLE Livros_Autores (
+	CodLivro 	INT AUTO_INCREMENT,
+	CodAutor	INT NOT NULL,
+	PRIMARY KEY (CodLivro, CodAutor),
+	FOREIGN KEY (CodLivro) REFERENCES Livros(CodLivro)
+		ON UPDATE CASCADE,
+	FOREIGN KEY (CodAutor) REFERENCES Autores(CodAutor)
+		ON UPDATE CASCADE
+	);
+	
+CREATE TABLE Requisicoes (
+	N_Requisicao	INT AUTO_INCREMENT,
+	ID_Utente		INT NOT NULL,
+	CodLivro		INT NOT NULL,
+	DataRequisicao	DATETIME NOT NULL,
+	DataEntrega		DATETIME,
+	PRIMARY KEY (N_Requisicao),
+	FOREIGN KEY (ID_Utente) REFERENCES Utentes(ID_Utente)
+		ON UPDATE CASCADE,
+	FOREIGN KEY (CodLivro) REFERENCES Livros(CodLivro)
+		ON UPDATE CASCADE
+	);
+	
+-- 3
+INSERT INTO Areas_Tematicas (Designacao) VALUES 
+('Ficção Científica'),
+('Fantasia'),
+('Romance'),
+('Viagens'),
+('Teatro'),
+('Banda Desenhada'),
+('Humor'),
+('Técnicos');
+
+INSERT INTO Autores (NomeAutor) VALUES
+('John Layman'),
+('Suzana Borges'),
+('Artur Ribeiro'),
+('Afonso Cruz'),
+('António Lobo Antunes'),
+('Isac Asimov');
+
+INSERT INTO Utentes (Nome, Morada) VALUES
+('Marilia Pamies', 'Rua do Tejo'),
+('João Siborro', 'R. N. S. Mãe dos Homens'),
+('Iris Plácido', 'Rua dos Bombeiros Nº10'),
+('Inês Siborro', 'R. José Villaret');
+
+INSERT INTO Livros (Titulo, Editora, Ano, CodArea) VALUES
+('Para Aquela Que Está Sentada No Escuro À Minha Espera', 'D. Quixote', '2016',3),
+('Para onde vão os guarda-chuvas', 'Companhia das Letras', '2013',3),
+('Fundação', 'Saída de Emergência', '2019', 1),
+('Tony Chu', 'GFloy', '2017', 6),
+('desenvergonhadamente pessoal', 'Oficina do Livro', '2055', 5),
+('Onde estavas quando criei o mundo?', 'Guerra e Paz', '2016', 5),
+('Nem todas as baleias voam', 'Companhia das Letras', '2015', 3),
+('HIstoria de Portugal', 'Guerra e Paz', '2001', 8);
+
+INSERT INTO	Livros_Autores (CodLivro, CodAutor) VALUES
+(5,2),
+(6,3),
+(4,1),
+(3,6),
+(2,4),
+(1,5),
+(7,4),
+(8,2);
+
+INSERT INTO Requisicoes (ID_Utente, CodLivro, DataRequisicao, DataEntrega) VALUES
+(2, 2, '2018-09-01', '2018-09-10'),
+(3, 1, '2018-10-01', '2018-11-10'),
+(4, 5, '2018-12-01', '2018-12-10'),
+(3, 2, '2019-06-01', NULL),
+(2, 4, '2019-06-01', '2019-06-06'),
+(2, 1, '2019-06-06', NULL),
+(1, 3, '2019-06-19', NULL),
+(2, 1, '2020-06-06', NULL),
+(2, 5, '2020-06-10', '2020-08-10'),
+(2, 3, '2020-09-06', NULL),
+(2, 6, '2020-10-06', '2020-11-10'),
+(2, 2, '2021-01-06', '2021-02-02'),
+(2, 3, '2021-03-14', NULL),
+(2, 7, '2021-06-06', NULL),
+(2, 8, '2021-07-06', NULL);
+
+
+
+-- 4A
+ALTER TABLE Utentes
+	ADD VIP BIT DEFAULT 0 NOT NULL;
+	
+-- 4B
+ALTER TABLE Utentes
+	ADD Email 		VARCHAR(100),
+	ADD Datanascimento	DATETIME;
+
+	
+-- 5A
+
+SELECT 
+	CodLivro, Titulo, Editora, Ano, l.CodArea, t.Designacao
+FROM
+	Livros l RIGHT JOIN areas_tematicas t
+ON
+	l.CodArea = t.codArea
+WHERE
+	Titulo like '%Portugal%'
+	
+-- 5B
+SELECT
+	T.CodArea, COUNT(CodLivro) as Contagem
+FROM
+	Areas_Tematicas T LEFT JOIN Livros L ON T.CodArea = L.CodArea	
+GROUP BY 
+	T.CodArea;
+
+-- 5b com designação
+
+SELECT
+	T.CodArea, T.Designacao, COUNT(CodLivro) as Contagem
+FROM
+	Areas_Tematicas T LEFT JOIN Livros L ON T.CodArea = L.CodArea	
+GROUP BY 
+	T.CodArea
+
+-- 5C
+SELECT 
+	R.N_Requisicao, L.Titulo, R.DataRequisicao, R.ID_Utente, U.Nome
+FROM 
+	requisicoes R, livros L, utentes U
+
+WHERE
+	R.CodLivro = L.CodLivro AND
+    	R.ID_Utente = U.ID_Utente AND
+    	DataEntrega IS Null
+
+-- 5D
+
+SELECT 
+	N_Requisicao, R.ID_Utente,U.Nome, R.CodLivro,L.Titulo, DataRequisicao, DataEntrega
+FROM
+	requisicoes R, livros L, utentes U
+WHERE
+	R.ID_Utente = U.ID_Utente AND
+    	R.CodLivro = L.CodLivro	AND
+	YEAR(DataRequisicao) = 2019
+
+-- 5E
+
+SELECT 
+
+	N_Requisicao, R.ID_Utente,U.Nome, R.CodLivro,L.Titulo, DataRequisicao, DataEntrega
+FROM
+	requisicoes R, livros L, utentes U
+WHERE
+	R.ID_Utente = U.ID_Utente AND
+    	R.CodLivro = L.CodLivro	AND
+	DataRequisicao >= '2018-09-01' AND
+    	DataRequisicao <= '2018-12-31'
+
+-- 5F
+
+SELECT 
+	NomeAutor As 'AUTOR', COUNT(CodLivro) AS 'Nº DE LIVROS'
+FROM Autores A LEFT JOIN livros_autores LA
+	ON A.CodAutor = LA.CodAutor
+GROUP BY 
+	NomeAutor
+
+-- 5G - Será feita respondida nos 4 passos que se seguem
+
+-- 5G.1 Actualizar os utentes que resuisitaram mais do 10 vezes como utentes vip
+
+CREATE VIEW vReqUtente as 
+SELECT
+	R.ID_Utente, U.NOME, COUNT(R.ID_Utente) AS Nr_Req
+FROM 
+	Requisicoes R, utentes U
+WHERE
+	R.ID_Utente = U.ID_Utente
+GROUP BY
+	ID_Utente
+
+-- 5G.2 Pesquisa de utentes com mais do que 10 requisições à view, de modo a sabermos quem são.
+
+SELECT 
+	ID_Utente, NOME, Nr_Req As 'Nº Requisições'
+FROM 
+	vrequtente
+WHERE 
+	Nr_Req > 10
+
+-- 5G.3 - SELECT ID_Utente FROM vrequtente WHERE Nr_Req > 10 --> pesquisa para utentes com mais de 10 requisições (sem detalhes)
+
+UPDATE 
+	Utentes SET Vip = 1
+WHERE
+	ID_Utente IN (SELECT ID_Utente FROM vrequtente WHERE Nr_Req > 10);
+
+-- 5G.4 Verificar se a actualização ocorreu
+
+SELECT * FROM utentes
